@@ -1,0 +1,12 @@
+[
+  {"question":"Qual destes não é um planeta do Sistema Solar?","options":["Marte","Plutão","Júpiter","Saturno"],"correctIndex":1,"level":1,"value":1000},
+  {"question":"Em que ano o homem pisou na Lua pela primeira vez?","options":["1967","1969","1971","1973"],"correctIndex":1,"level":2,"value":2000},
+  {"question":"Qual é o maior oceano do mundo?","options":["Atlântico","Índico","Ártico","Pacífico"],"correctIndex":3,"level":3,"value":5000},
+  {"question":"Quantos continentes existem?","options":["5","6","7","8"],"correctIndex":2,"level":4,"value":10000},
+  {"question":"Qual é a capital da França?","options":["Lyon","Marselha","Paris","Nice"],"correctIndex":2,"level":5,"value":20000},
+  {"question":"Quem pintou a Mona Lisa?","options":["Van Gogh","Leonardo da Vinci","Picasso","Michelangelo"],"correctIndex":1,"level":6,"value":50000},
+  {"question":"Qual é o elemento químico com símbolo Au?","options":["Prata","Cobre","Ouro","Alumínio"],"correctIndex":2,"level":7,"value":100000},
+  {"question":"Em que país nasceu o futebolista Pelé?","options":["Argentina","Uruguai","Brasil","Paraguai"],"correctIndex":2,"level":8,"value":250000},
+  {"question":"Quantos lados tem um dodecágono?","options":["10","11","12","13"],"correctIndex":2,"level":9,"value":500000},
+  {"question":"Qual é a capital da Austrália?","options":["Sydney","Melbourne","Canberra","Brisbane"],"correctIndex":2,"level":10,"value":1000000}
+]

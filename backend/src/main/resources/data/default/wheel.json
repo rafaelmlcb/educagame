@@ -1,0 +1,13 @@
+[
+  {"label":"100","value":100,"color":"#10b981","type":"NORMAL"},
+  {"label":"50","value":50,"color":"#3b82f6","type":"NORMAL"},
+  {"label":"Perde vez","value":0,"color":"#ef4444","type":"LOSE_TURN"},
+  {"label":"200","value":200,"color":"#10b981","type":"NORMAL"},
+  {"label":"75","value":75,"color":"#3b82f6","type":"NORMAL"},
+  {"label":"Bônus","value":150,"color":"#f59e0b","type":"BONUS"},
+  {"label":"25","value":25,"color":"#3b82f6","type":"NORMAL"},
+  {"label":"Perde Tudo","value":0,"color":"#dc2626","type":"LOSE_ALL"},
+  {"label":"Perde vez","value":0,"color":"#ef4444","type":"LOSE_TURN"},
+  {"label":"100","value":100,"color":"#10b981","type":"NORMAL"},
+  {"label":"50","value":50,"color":"#3b82f6","type":"NORMAL"}
+]
