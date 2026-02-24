@@ -63,3 +63,4 @@ App em `http://localhost:5173`. O proxy do Vite encaminha `/api` e `/game` para 
 
 - Backend: `cd backend && mvn test`
 - E2E frontend: `cd frontend && npm run test:e2e`
+# educagame
