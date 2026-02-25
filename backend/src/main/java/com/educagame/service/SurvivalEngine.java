@@ -40,9 +40,9 @@ public class SurvivalEngine implements GameEngineInterface {
         Map<String, Object> payload = new ConcurrentHashMap<>();
         payload.put("phrases", phrases);
         payload.put("phraseIndex", 0);
-        payload.put("responses", new ConcurrentHashMap<String, Map<String, Object>>());
-        payload.put("eliminatedPlayers", new HashSet<String>());
-        payload.put("roundScores", new ArrayList<Map<String, Object>>());
+        payload.put("responses", new ConcurrentHashMap<>());
+        payload.put("eliminatedPlayers", new HashSet<>());
+        payload.put("roundScores", new ArrayList<>());
         
         // Initialize player lives
         Map<String, Integer> playerLives = new HashMap<>();
@@ -58,6 +58,7 @@ public class SurvivalEngine implements GameEngineInterface {
         LOG.infof("Survival game started in room %s with %d phrases", session.getRoomId(), phrases.size());
     }
 
+    @SuppressWarnings("unchecked")
     public void transitionToPlaying(GameSession session) {
         session.setPhase(GamePhase.PLAYING);
         showChallenge(session, 0);
@@ -76,14 +77,14 @@ public class SurvivalEngine implements GameEngineInterface {
         }
         
         payload.put("phraseIndex", index);
-        payload.put("responses", new ConcurrentHashMap<String, Map<String, Object>>());
+        payload.put("responses", new ConcurrentHashMap<>());
         
         String phrase = phrases.get(index).toUpperCase(Locale.ROOT);
         String maskedPhrase = createMaskedPhrase(phrase);
         
         payload.put("originalPhrase", phrase);
         payload.put("maskedPhrase", maskedPhrase);
-        payload.put("revealedLetters", new HashSet<Character>());
+        payload.put("revealedLetters", new HashSet<>());
         
         int timeMs = DEFAULT_TIME_MS;
         payload.put("timeLimitMs", timeMs);

@@ -6,7 +6,7 @@ import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
 import { ArrowLeft } from 'lucide-react'
 import { api } from '@/api/client'
-import { GlassCard } from '@/components/GlassCard'
+import GlassCard from '@/components/GlassCard'
 
 export function ThemeSelectPage() {
   const [themes, setThemes] = useState<string[]>([])

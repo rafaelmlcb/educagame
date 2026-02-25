@@ -43,6 +43,11 @@ public class RoomManager {
             LOG.warnf("Join failed: room %s not found", roomId);
             return false;
         }
+        if (session.getPlayers().stream().anyMatch(p -> p.getId().equals(connectionId))) {
+            roomConnections.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(connectionId);
+            LOG.debugf("Join ignored (already joined): conn=%s room=%s", connectionId, roomId);
+            return true;
+        }
         if (session.getPlayers().size() >= MAX_PLAYERS) {
             LOG.warnf("Join failed: room %s full", roomId);
             return false;

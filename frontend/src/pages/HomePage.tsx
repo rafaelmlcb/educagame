@@ -10,7 +10,8 @@ import Link from '@mui/material/Link'
 import { Gamepad2, Plus } from 'lucide-react'
 import { api } from '@/api/client'
 import type { Room } from '@/types/game'
-import { GlassCard } from '@/components/GlassCard'
+import GlassCard from '@/components/GlassCard'
+import { log } from '@/api/logger'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -18,12 +19,27 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<Room[]>('/api/rooms').then((r) => { setRooms(r.data); setLoading(false); }).catch(() => setLoading(false))
+    api.get<Room[]>('/api/rooms')
+      .then((r) => {
+        setRooms(r.data)
+        setLoading(false)
+      })
+      .catch((e) => {
+        log.error('rooms:list:error', { message: e?.message })
+        setLoading(false)
+      })
   }, [])
 
   const createRoom = async (gameType: string) => {
-    const { data } = await api.post<{ roomId: string }>('/api/rooms', { theme: 'default', gameType, privateRoom: false })
-    navigate(`/room/${data.roomId}`)
+    try {
+      log.debug('rooms:create:request', { gameType })
+      const { data } = await api.post<{ roomId: string }>('/api/rooms', { theme: 'default', gameType, privateRoom: false })
+      log.debug('rooms:create:success', { gameType, roomId: data.roomId })
+      navigate(`/room/${data.roomId}`)
+    } catch (e: unknown) {
+      log.error('rooms:create:error', { gameType, message: (e as { message?: string } | null)?.message })
+      throw e
+    }
   }
 
   return (

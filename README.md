@@ -87,3 +87,58 @@ App em `http://localhost:5173`. O proxy do Vite encaminha `/api` e `/game` para 
 cd frontend
 npx playwright show-trace test-results/<pasta-do-teste>/trace.zip
 ```
+
+## Debug/Tracing (dev)
+
+### Correlation ID (REST)
+
+- O frontend envia um header `X-Request-Id` em todas as chamadas HTTP (Axios).
+- O backend ecoa o mesmo header na resposta e inclui `requestId=...` em todos os logs do Quarkus via MDC.
+
+Isso facilita correlacionar:
+
+- Log do browser `http:request`/`http:response`
+- Access log do Quarkus
+- Logs de `com.educagame.*`
+
+### Níveis de log (frontend)
+
+Você pode controlar o nível via env:
+
+```bash
+VITE_LOG_LEVEL=debug npm run dev
+```
+
+Valores suportados: `debug`, `info`, `warn`, `error`.
+
+### WebSocket (dev)
+
+- WS do jogo: `ws://localhost:8080/game`.
+- Em `dev`, o React `StrictMode` pode montar/desmontar componentes 2x e gerar tentativas de conexão/fechamento rápidas; os logs `ws:*` ajudam a enxergar isso.
+
+### Diagnóstico rápido: ECONNREFUSED no proxy do Vite
+
+Se aparecer `http proxy error ... ECONNREFUSED 127.0.0.1:8080`:
+
+- Confirme que o backend está rodando:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/q/health
+```
+
+- Confirme que o endpoint está acessível:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/rooms
+```
+
+- Garanta que você não tem múltiplos `npm run dev` rodando ao mesmo tempo.
+
+## Warnings e Ruído no Console
+
+### Backend: Warnings do Compilador
+- **Unchecked operations**: Suprimidos com `@SuppressWarnings("unchecked")` em `SurvivalEngine.java`.
+- **system modules path not set**: Opcional; pode ser ignorado ou adicionado `--release 17` ao Maven se desejado.
+
+### Frontend: Ruído de Extensões do Browser
+Mensagens como `stats:1 listener indicated async response` no console do navegador são ruído de extensões (ex: DevTools, ad blockers) e não afetam o app. Podem ser ignoradas.

@@ -28,6 +28,16 @@ export async function joinAsHost(page: Page, name?: string) {
   return playerName
 }
 
+export async function joinRoomById(page: Page, roomId: string, name?: string) {
+  const playerName = name ?? `E2E_${Date.now()}`
+  await page.goto(`/room/${roomId}`)
+  await page.getByTestId('player-name-input').fill(playerName)
+  await page.getByTestId('join-game').click()
+  await expect(page.getByTestId('game-room')).toBeVisible()
+  await expect(page.getByTestId('game-type')).not.toHaveText('—', { timeout: 15000 })
+  return playerName
+}
+
 export async function startGame(page: Page) {
   await page.getByTestId('start-game').click()
   // wait for phase to move away from LOBBY (caption text contains phase)

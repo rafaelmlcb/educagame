@@ -65,25 +65,34 @@ public class RoomResource {
     @GET
     @Path("/rooms")
     public List<Room> listRooms() {
-        return roomManager.listPublicRooms();
+        List<Room> rooms = roomManager.listPublicRooms();
+        LOG.debugf("REST listRooms count=%d", rooms.size());
+        return rooms;
     }
 
     @POST
     @Path("/rooms")
     public Response createRoom(CreateRoomRequest request) {
+        LOG.infof("REST createRoom requested theme=%s gameType=%s privateRoom=%s",
+                request != null ? request.getTheme() : null,
+                request != null ? request.getGameType() : null,
+                request != null ? request.getPrivateRoom() : null);
         if (request == null || request.getGameType() == null) {
+            LOG.warn("REST createRoom badRequest: gameType required");
             return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", "gameType required")).build();
         }
         GameType type;
         try {
             type = GameType.valueOf(request.getGameType().toUpperCase().replace("-", "_"));
         } catch (IllegalArgumentException e) {
+            LOG.warnf("REST createRoom badRequest: invalid gameType=%s", request.getGameType());
             return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", "Invalid gameType")).build();
         }
         String theme = request.getTheme() != null ? request.getTheme() : "default";
         boolean isPrivate = request.getPrivateRoom() != null && request.getPrivateRoom();
         GameSession session = roomManager.createRoom(theme, type, isPrivate);
         gameHistoryService.recordGameCreated(type);
+        LOG.infof("REST createRoom created roomId=%s theme=%s gameType=%s", session.getRoomId(), session.getTheme(), session.getGameType());
         return Response.status(Response.Status.CREATED).entity(Map.of(
                 "roomId", session.getRoomId(),
                 "theme", session.getTheme(),

@@ -24,10 +24,10 @@ export function AdminStatsPage() {
     api.get<Summary>('/api/stats/summary').then((r) => setSummary(r.data)).catch(() => {})
     Promise.all([
       api.get('/api/stats/leaderboard?mode=ROLETRANDO&limit=10').then((r) => r.data),
-      api.get('/api/stats/leaderboard?mode=QUIZ&limit=10').then((r) => r.data),
-      api.get('/api/stats/leaderboard?mode=SHOW_DO_MILHAO&limit=10').then((r) => r.data),
+      api.get('/api/stats/leaderboard?mode=QUIZ_SPEED&limit=10').then((r) => r.data),
+      api.get('/api/stats/leaderboard?mode=QUIZ_INCREMENTAL&limit=10').then((r) => r.data),
     ])
-      .then(([r, q, m]) => setLeaderboard({ ROLETRANDO: r, QUIZ: q, SHOW_DO_MILHAO: m }))
+      .then(([r, q, m]) => setLeaderboard({ ROLETRANDO: r, QUIZ_SPEED: q, QUIZ_INCREMENTAL: m }))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -71,11 +71,15 @@ export function AdminStatsPage() {
               Leaderboards (Top 10)
             </Typography>
             <Grid container size={{ xs: 12 }} spacing={2}>
-              {(['ROLETRANDO', 'QUIZ', 'SHOW_DO_MILHAO'] as const).map((mode) => (
-                <Grid size={{ xs: 12, md: 4 }} key={mode}>
+              {([
+                { key: 'ROLETRANDO', label: 'ROLETRANDO' },
+                { key: 'QUIZ_SPEED', label: 'QUIZ' },
+                { key: 'QUIZ_INCREMENTAL', label: 'SHOW DO MILHÃO' },
+              ] as const).map(({ key, label }) => (
+                <Grid size={{ xs: 12, md: 4 }} key={key}>
                   <Paper sx={{ p: 2, borderRadius: 3 }}>
-                    <Typography variant="subtitle1" fontWeight={700} color="primary" sx={{ mb: 1 }}>{mode.replace('_', ' ')}</Typography>
-                    {(leaderboard[mode] ?? []).map((e: { name: string; score: number }, i: number) => (
+                    <Typography variant="subtitle1" fontWeight={700} color="primary" sx={{ mb: 1 }}>{label}</Typography>
+                    {(leaderboard[key] ?? []).map((e: { name: string; score: number }, i: number) => (
                       <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
                         <Typography variant="body2">{i + 1}. {e.name}</Typography>
                         <Typography variant="body2" fontWeight={700}>{e.score}</Typography>
