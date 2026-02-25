@@ -7,6 +7,13 @@ import com.educagame.service.RoletrandoEngine;
 import com.educagame.service.RoletrandoBotScheduler;
 import com.educagame.service.QuizEngine;
 import com.educagame.service.MillionaireEngine;
+import com.educagame.service.SurvivalEngine;
+import com.educagame.service.SequencingEngine;
+import com.educagame.service.DetectiveEngine;
+import com.educagame.service.BuzzerEngine;
+import com.educagame.service.SensoryEngine;
+import com.educagame.service.BinaryEngine;
+import com.educagame.service.CombinationEngine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.websockets.next.OnClose;
 import io.quarkus.websockets.next.OnOpen;
@@ -20,6 +27,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 
 /**
  * Single WebSocket endpoint for game. Clients send JOIN with roomId; state is broadcast per room.
@@ -46,6 +54,20 @@ public class GameWebSocket {
     @Inject
     MillionaireEngine millionaireEngine;
     @Inject
+    SurvivalEngine survivalEngine;
+    @Inject
+    SequencingEngine sequencingEngine;
+    @Inject
+    DetectiveEngine detectiveEngine;
+    @Inject
+    BuzzerEngine buzzerEngine;
+    @Inject
+    SensoryEngine sensoryEngine;
+    @Inject
+    BinaryEngine binaryEngine;
+    @Inject
+    CombinationEngine combinationEngine;
+    @Inject
     ObjectMapper objectMapper;
     @Inject
     GameBroadcaster broadcaster;
@@ -65,6 +87,8 @@ public class GameWebSocket {
             String type = (String) map.get("type");
             if (type == null) return;
 
+            LOG.debugf("WS msg type=%s", type);
+
             String connectionId = connection.userData().get(KEY_CONNECTION_ID);
             switch (type) {
                 case "JOIN" -> handleJoin(connectionId, map);
@@ -78,12 +102,20 @@ public class GameWebSocket {
                 case "LIFELINE_50_50" -> handleLifeline5050(connectionId);
                 case "LIFELINE_UNI" -> handleLifelineUni(connectionId);
                 case "LIFELINE_SKIP" -> handleLifelineSkip(connectionId);
+                case "SURVIVAL_ANSWER" -> handleSurvivalAnswer(connectionId, map);
+                case "SEQUENCING_SUBMIT" -> handleSequencingSubmit(connectionId, map);
+                case "DETECTIVE_GUESS" -> handleDetectiveGuess(connectionId, map);
+                case "BUZZER_BUZZ" -> handleBuzzerBuzz(connectionId);
+                case "BUZZER_ANSWER" -> handleBuzzerAnswer(connectionId, map);
+                case "SENSORY_GUESS" -> handleSensoryGuess(connectionId, map);
+                case "BINARY_DECISION" -> handleBinaryDecision(connectionId, map);
+                case "COMBINATION_ACTION" -> handleCombinationAction(connectionId, map);
                 case "ANSWER" -> handleAnswer(connectionId, map);
                 case "PING" -> connection.sendText(toJson(WsOutbound.pong())).subscribe().asCompletionStage();
                 default -> connection.sendText(toJson(WsOutbound.error("Unknown type: " + type))).subscribe().asCompletionStage();
             }
         } catch (Exception e) {
-            LOG.warnf("Message handling failed: %s", e.getMessage());
+            LOG.warn("Message handling failed", e);
             connection.sendText(toJson(WsOutbound.error("Invalid message"))).subscribe().asCompletionStage();
         }
     }
@@ -91,11 +123,14 @@ public class GameWebSocket {
     private void handleJoin(String connectionId, Map<String, Object> map) {
         String roomId = (String) map.get("roomId");
         String playerName = (String) map.get("playerName");
+
+        LOG.infof("WS JOIN requested conn=%s room=%s player=%s", connectionId, roomId, playerName);
         if (!ValidationUtil.isValidRoomId(roomId) || !ValidationUtil.isValidPlayerName(playerName)) {
             connection.sendText(toJson(WsOutbound.error("Invalid room or player name"))).subscribe().asCompletionStage();
             return;
         }
         if (!roomManager.joinRoom(roomId, connectionId, playerName)) {
+            LOG.warnf("WS JOIN failed conn=%s room=%s player=%s", connectionId, roomId, playerName);
             connection.sendText(toJson(WsOutbound.error("Could not join room"))).subscribe().asCompletionStage();
             return;
         }
@@ -112,9 +147,7 @@ public class GameWebSocket {
         roomManager.getSession(roomId).ifPresent(session -> {
             if (!connectionId.equals(session.getHostConnectionId())) return;
             gameEngine.startGame(session);
-            if (session.getGameType() == GameType.ROLETRANDO || session.getGameType() == GameType.QUIZ || session.getGameType() == GameType.SHOW_DO_MILHAO) {
-                gameEngine.transitionToPlaying(session);
-            }
+            gameEngine.transitionToPlaying(session);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
             if (session.getGameType() == GameType.ROLETRANDO) {
                 botScheduler.scheduleBotTurnIfNeeded(roomId);
@@ -195,7 +228,7 @@ public class GameWebSocket {
         }
         int answerIndex = ((Number) idxObj).intValue();
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.QUIZ) return;
+            if (session.getGameType() != GameType.QUIZ_SPEED) return;
             quizEngine.submitAnswer(session, connectionId, answerIndex);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
@@ -205,7 +238,7 @@ public class GameWebSocket {
         String roomId = connection.userData().get(KEY_ROOM_ID);
         if (roomId == null) return;
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.QUIZ) return;
+            if (session.getGameType() != GameType.QUIZ_SPEED) return;
             quizEngine.hostNextStage(session, connectionId);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
@@ -221,7 +254,7 @@ public class GameWebSocket {
         }
         int answerIndex = ((Number) idxObj).intValue();
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+            if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
             millionaireEngine.submitAnswer(session, connectionId, answerIndex);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
@@ -231,7 +264,7 @@ public class GameWebSocket {
         String roomId = connection.userData().get(KEY_ROOM_ID);
         if (roomId == null) return;
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+            if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
             millionaireEngine.lifeline50_50(session, connectionId);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
@@ -241,7 +274,7 @@ public class GameWebSocket {
         String roomId = connection.userData().get(KEY_ROOM_ID);
         if (roomId == null) return;
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+            if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
             millionaireEngine.lifelineUni(session, connectionId);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
@@ -251,8 +284,106 @@ public class GameWebSocket {
         String roomId = connection.userData().get(KEY_ROOM_ID);
         if (roomId == null) return;
         roomManager.getSession(roomId).ifPresent(session -> {
-            if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+            if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
             millionaireEngine.lifelineSkip(session, connectionId);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleSurvivalAnswer(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object answerObj = map.get("answer");
+        String answer = answerObj != null ? String.valueOf(answerObj) : "";
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.SURVIVAL) return;
+            survivalEngine.submitAnswer(session, connectionId, answer);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleSequencingSubmit(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object idsObj = map.get("orderedIds");
+        List<String> orderedIds = idsObj instanceof List ? (List<String>) idsObj : List.of();
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.SEQUENCING) return;
+            sequencingEngine.submitSequence(session, connectionId, orderedIds);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleDetectiveGuess(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object guessObj = map.get("guess");
+        String guess = guessObj != null ? String.valueOf(guessObj) : "";
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.DETECTIVE) return;
+            detectiveEngine.submitAnswer(session, connectionId, guess);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleBuzzerBuzz(String connectionId) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.BUZZER) return;
+            buzzerEngine.playerBuzz(session, connectionId);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleBuzzerAnswer(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object idxObj = map.get("answerIndex");
+        if (idxObj == null) return;
+        int answerIndex = ((Number) idxObj).intValue();
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.BUZZER) return;
+            buzzerEngine.submitAnswer(session, connectionId, answerIndex);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleSensoryGuess(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object guessObj = map.get("guess");
+        String guess = guessObj != null ? String.valueOf(guessObj) : "";
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.SENSORY) return;
+            sensoryEngine.submitAnswer(session, connectionId, guess);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    private void handleBinaryDecision(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object decisionObj = map.get("decision");
+        if (!(decisionObj instanceof Boolean)) return;
+        boolean decision = (Boolean) decisionObj;
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.BINARY_DECISION) return;
+            binaryEngine.submitDecision(session, connectionId, decision);
+            broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleCombinationAction(String connectionId, Map<String, Object> map) {
+        String roomId = connection.userData().get(KEY_ROOM_ID);
+        if (roomId == null) return;
+        Object actionObj = map.get("action");
+        Map<String, Object> action = actionObj instanceof Map ? (Map<String, Object>) actionObj : Map.of();
+        roomManager.getSession(roomId).ifPresent(session -> {
+            if (session.getGameType() != GameType.COMBINATION) return;
+            combinationEngine.submitStageAction(session, connectionId, action);
             broadcaster.broadcastToRoom(roomId, WsOutbound.state(session));
         });
     }
@@ -263,9 +394,9 @@ public class GameWebSocket {
         roomManager.getSession(roomId).ifPresent(session -> {
             Integer answerIndex = map.get("answerIndex") != null ? ((Number) map.get("answerIndex")).intValue() : null;
             if (answerIndex != null) {
-                if (session.getGameType() == GameType.QUIZ) {
+                if (session.getGameType() == GameType.QUIZ_SPEED) {
                     quizEngine.submitAnswer(session, connectionId, answerIndex);
-                } else if (session.getGameType() == GameType.SHOW_DO_MILHAO) {
+                } else if (session.getGameType() == GameType.QUIZ_INCREMENTAL) {
                     millionaireEngine.submitAnswer(session, connectionId, answerIndex);
                 }
             }

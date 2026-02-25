@@ -1,6 +1,6 @@
 # EducaGame
 
-Ecossistema de jogos educacionais multiplayer (Roletrando, Quiz, Show do Milhão) com tempo real, temas dinâmicos e arquitetura moderna.
+Ecossistema de jogos educacionais multiplayer com tempo real, temas dinâmicos e arquitetura moderna.
 
 ## Stack
 
@@ -48,9 +48,16 @@ App em `http://localhost:5173`. O proxy do Vite encaminha `/api` e `/game` para 
 
 ## Funcionalidades
 
-- **Roletrando:** Roleta com valores e casas especiais (Perde vez, Perde Tudo), GUESS/SOLVE, turnos validados no servidor, bots que preenchem até 3 jogadores.
-- **Quiz:** Perguntas síncronas, pontuação por velocidade, etapas (Pergunta → Feedback → Ranking) controladas pelo host.
-- **Show do Milhão:** 10 níveis, lifelines 50:50, Universitários e Pular, prêmio garantido.
+- **Roletrando (ROLETRANDO):** Roleta com valores e casas especiais (Perde vez, Perde Tudo), GUESS/SOLVE, turnos validados no servidor, bots que preenchem até 3 jogadores.
+- **Quiz (velocidade) (QUIZ_SPEED):** Perguntas síncronas, pontuação por velocidade.
+- **Quiz (incremental) / Show do Milhão (QUIZ_INCREMENTAL):** 10 níveis, lifelines 50:50, Universitários e Pular, prêmio garantido.
+- **Sobrevivência / Acerte ou Caia (SURVIVAL):** completar frase/palavra (vidas por jogador).
+- **Ordenação (SEQUENCING):** organizar itens em sequência lógica.
+- **Detetive (DETECTIVE):** dedução progressiva.
+- **Buzzer (BUZZER):** primeiro a buzinar responde sob pressão.
+- **Sensorial (SENSORY):** identificar mídia/descrição.
+- **Decisão binária (BINARY_DECISION):** verdadeiro/falso.
+- **Combinação (COMBINATION):** jogo por estágios combinando tipos.
 - **Histórico e estatísticas:** Partidas registradas em memória; `/api/stats/summary` e `/api/stats/leaderboard?mode=...`.
 
 ## Segurança
@@ -62,5 +69,21 @@ App em `http://localhost:5173`. O proxy do Vite encaminha `/api` e `/game` para 
 ## Testes
 
 - Backend: `cd backend && mvn test`
-- E2E frontend: `cd frontend && npm run test:e2e`
-# educagame
+- E2E (Playwright): `cd frontend && npm run test:e2e`
+
+### E2E (como funciona)
+
+- O Playwright usa `globalSetup`/`globalTeardown` para:
+  - buildar o backend com Maven
+  - iniciar o backend via JAR (`java -jar target/quarkus-app/quarkus-run.jar`)
+  - aguardar o healthcheck (`/q/health`)
+
+### Debug de falhas E2E
+
+- Trace/vídeo/screenshot são mantidos em falhas.
+- Para inspecionar um trace:
+
+```bash
+cd frontend
+npx playwright show-trace test-results/<pasta-do-teste>/trace.zip
+```

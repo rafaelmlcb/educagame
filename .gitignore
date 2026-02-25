@@ -67,3 +67,12 @@ Thumbs.db
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Playwright (monorepo)
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache/
+
+# TypeScript incremental build
+*.tsbuildinfo

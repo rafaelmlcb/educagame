@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Paper from '@mui/material/Paper'
 import Grid from '@mui/material/Grid2'
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left'
+import { ArrowLeft } from 'lucide-react'
 import { api } from '@/api/client'
 
 interface Summary {

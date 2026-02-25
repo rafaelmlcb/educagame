@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Quiz multiplayer: synchronous questions, speed-based scoring, host advances stages.
  */
 @ApplicationScoped
-public class QuizEngine {
+public class QuizEngine implements GameEngineInterface {
 
     private static final Logger LOG = Logger.getLogger(QuizEngine.class);
     private static final int DEFAULT_TIME_MS = 15000;
@@ -28,7 +28,7 @@ public class QuizEngine {
 
     @SuppressWarnings("unchecked")
     public void startGame(GameSession session) {
-        if (session.getGameType() != GameType.QUIZ || session.getPhase() != com.educagame.model.GamePhase.LOBBY) return;
+        if (session.getGameType() != GameType.QUIZ_SPEED || session.getPhase() != com.educagame.model.GamePhase.LOBBY) return;
         session.setPhase(GamePhase.COUNTDOWN);
         session.setCurrentTurnIndex(0);
         List<Map<String, Object>> questions = dataLoaderService.getQuizQuestions(session.getTheme());
@@ -74,7 +74,7 @@ public class QuizEngine {
     /** Returns true if registered (first answer only). */
     @SuppressWarnings("unchecked")
     public boolean submitAnswer(GameSession session, String connectionId, int answerIndex) {
-        if (session.getGameType() != GameType.QUIZ || session.getPhase() != GamePhase.QUIZ_QUESTION) return false;
+        if (session.getGameType() != GameType.QUIZ_SPEED || session.getPhase() != GamePhase.QUIZ_QUESTION) return false;
         Map<String, Object> payload = (Map<String, Object>) session.getGamePayload();
         if (payload == null) return false;
         Map<String, Map<String, Object>> responses = (Map<String, Map<String, Object>>) payload.get("responses");
@@ -109,7 +109,7 @@ public class QuizEngine {
     /** Host advances: QUESTION -> FEEDBACK -> RANKING -> next QUESTION or GAME_END. */
     @SuppressWarnings("unchecked")
     public void hostNextStage(GameSession session, String connectionId) {
-        if (session.getGameType() != GameType.QUIZ) return;
+        if (session.getGameType() != GameType.QUIZ_SPEED) return;
         if (!connectionId.equals(session.getHostConnectionId())) return;
 
         GamePhase phase = session.getPhase();
@@ -145,5 +145,15 @@ public class QuizEngine {
                 .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
                 .map(p -> Map.<String, Object>of("id", p.getId(), "name", p.getName(), "score", p.getScore()))
                 .toList();
+    }
+
+    @Override
+    public boolean supports(GameType gameType) {
+        return gameType == GameType.QUIZ_SPEED;
+    }
+
+    @Override
+    public GameType getSupportedGameType() {
+        return GameType.QUIZ_SPEED;
     }
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Roletrando (Roda a Roda) game logic: wheel, GUESS, SOLVE, Lucky Spin, turn validation.
  */
 @ApplicationScoped
-public class RoletrandoEngine {
+public class RoletrandoEngine implements GameEngineInterface {
 
     private static final Logger LOG = Logger.getLogger(RoletrandoEngine.class);
     private static final int MAX_BOTS = 3;
@@ -237,5 +237,15 @@ public class RoletrandoEngine {
         if (players.isEmpty()) return false;
         int idx = session.getCurrentTurnIndex() % players.size();
         return players.get(idx).getId().equals(connectionId);
+    }
+
+    @Override
+    public boolean supports(GameType gameType) {
+        return gameType == GameType.ROLETRANDO;
+    }
+
+    @Override
+    public GameType getSupportedGameType() {
+        return GameType.ROLETRANDO;
     }
 }

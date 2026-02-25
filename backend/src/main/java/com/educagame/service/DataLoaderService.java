@@ -85,6 +85,31 @@ public class DataLoaderService {
                 .toList();
     }
 
+    /** Sequencing: ordered items for arrangement games. */
+    public List<Map<String, Object>> getSequences(String theme) {
+        return loadJsonArray(theme, "sequences.json");
+    }
+
+    /** Detective: mysteries with progressive clues. */
+    public List<Map<String, Object>> getMysteries(String theme) {
+        return loadJsonArray(theme, "mysteries.json");
+    }
+
+    /** Sensory: sounds, images, and media items. */
+    public List<Map<String, Object>> getSensoryItems(String theme) {
+        return loadJsonArray(theme, "sensory.json");
+    }
+
+    /** Binary Decision: true/false statements. */
+    public List<Map<String, Object>> getStatements(String theme) {
+        return loadJsonArray(theme, "statements.json");
+    }
+
+    /** Combination: multi-stage game configurations. */
+    public List<Map<String, Object>> getCombinationStages(String theme) {
+        return loadJsonArray(theme, "combination.json");
+    }
+
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> loadResourceJsonArray(String resourcePath) {
         try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath)) {

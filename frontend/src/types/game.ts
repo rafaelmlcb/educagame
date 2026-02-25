@@ -1,4 +1,14 @@
-export type GameType = 'ROLETRANDO' | 'QUIZ' | 'SHOW_DO_MILHAO'
+export type GameType =
+  | 'ROLETRANDO'
+  | 'QUIZ_SPEED'
+  | 'QUIZ_INCREMENTAL'
+  | 'SURVIVAL'
+  | 'SEQUENCING'
+  | 'DETECTIVE'
+  | 'BUZZER'
+  | 'SENSORY'
+  | 'BINARY_DECISION'
+  | 'COMBINATION'
 export type GamePhase =
   | 'LOBBY'
   | 'COUNTDOWN'
@@ -56,6 +66,71 @@ export interface MillionairePayload {
   audiencePercents?: number[]
   won?: boolean
   finalPrize?: number
+}
+
+export interface SurvivalPayload {
+  originalPhrase?: string
+  maskedPhrase?: string
+  timeLimitMs?: number
+  playerLives?: Record<string, number>
+  eliminatedPlayers?: string[]
+}
+
+export interface SequencingPayload {
+  sequenceType?: string
+  sequenceDescription?: string
+  originalItems?: { id: string; content?: string }[]
+  shuffledItems?: { id: string; content?: string }[]
+  timeLimitMs?: number
+  responses?: Record<string, { orderedIds?: string[]; points?: number }>
+}
+
+export interface DetectivePayload {
+  category?: string
+  mysteryDescription?: string
+  revealedClues?: string[]
+  allClues?: string[]
+  answer?: string
+  timeLimitMs?: number
+  responses?: Record<string, { guess?: string; correct?: boolean; points?: number }>
+}
+
+export interface BuzzerPayload {
+  question?: string
+  options?: string[]
+  correctIndex?: number
+  currentBuzzWinner?: string | null
+  buzzOrder?: string[]
+  passCount?: number
+  timeLimitMs?: number
+  responses?: Record<string, { answerIndex?: number; correct?: boolean; points?: number }>
+}
+
+export interface SensoryPayload {
+  sensoryType?: string
+  description?: string
+  mediaUrl?: string
+  distortedMedia?: unknown
+  distortionLevel?: number
+  answer?: string
+  difficulty?: number
+  timeLimitMs?: number
+  responses?: Record<string, { guess?: string; correct?: boolean; points?: number }>
+}
+
+export interface BinaryPayload {
+  statementText?: string
+  isTrue?: boolean
+  explanation?: string
+  category?: string
+  difficulty?: number
+  timeLimitMs?: number
+  responses?: Record<string, { decision?: boolean; correct?: boolean; points?: number }>
+}
+
+export interface CombinationPayload {
+  currentStageType?: GameType
+  stagePayload?: Record<string, unknown>
 }
 
 export interface GameSession {

@@ -26,22 +26,29 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
     const url = getWsUrl(path)
+    console.debug('[ws] connect', url)
     setStatus('connecting')
     const ws = new WebSocket(url)
     wsRef.current = ws
     ws.onopen = () => {
+      console.debug('[ws] open')
       setStatus('open')
       onOpenRef.current?.()
     }
     ws.onclose = () => {
+      console.debug('[ws] close')
       setStatus('closed')
       wsRef.current = null
       onCloseRef.current?.()
     }
-    ws.onerror = () => setStatus('error')
+    ws.onerror = () => {
+      console.debug('[ws] error')
+      setStatus('error')
+    }
     ws.onmessage = (event) => {
       try {
         const data: WsOutbound = JSON.parse(event.data)
+        console.debug('[ws] recv', data?.type)
         onMessageRef.current?.(data)
       } catch {
         // ignore
@@ -59,7 +66,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   const send = useCallback((payload: object) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      const t = (payload as { type?: string })?.type
+      console.debug('[ws] send', t ?? payload)
       wsRef.current.send(JSON.stringify(payload))
+    } else {
+      const t = (payload as { type?: string })?.type
+      console.debug('[ws] drop(send while not open)', t ?? payload)
     }
   }, [])
 

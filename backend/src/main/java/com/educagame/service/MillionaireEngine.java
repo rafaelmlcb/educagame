@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Show do Milhão: 10 levels, lifelines 50:50, Universitários, Skip, prize ladder.
  */
 @ApplicationScoped
-public class MillionaireEngine {
+public class MillionaireEngine implements GameEngineInterface {
 
     private static final Logger LOG = Logger.getLogger(MillionaireEngine.class);
     private static final int MAX_LEVEL = 10;
@@ -28,7 +28,7 @@ public class MillionaireEngine {
 
     @SuppressWarnings("unchecked")
     public void startGame(GameSession session) {
-        if (session.getGameType() != GameType.SHOW_DO_MILHAO || session.getPhase() != GamePhase.LOBBY) return;
+        if (session.getGameType() != GameType.QUIZ_INCREMENTAL || session.getPhase() != GamePhase.LOBBY) return;
         session.setPhase(GamePhase.COUNTDOWN);
         session.setCurrentTurnIndex(0);
         Map<String, Object> payload = new ConcurrentHashMap<>();
@@ -37,8 +37,8 @@ public class MillionaireEngine {
         payload.put("lifeline50Used", false);
         payload.put("lifelineUniUsed", false);
         payload.put("lifelineSkipUsed", false);
-        payload.put("audiencePercents", null);
-        payload.put("removedOptions", null);
+        payload.put("audiencePercents", List.of());
+        payload.put("removedOptions", List.of());
         session.setGamePayload(payload);
         session.setRoundStartedAt(System.currentTimeMillis());
         LOG.infof("Millionaire started in room %s", session.getRoomId());
@@ -59,8 +59,8 @@ public class MillionaireEngine {
         Map<String, Object> payload = (Map<String, Object>) session.getGamePayload();
         if (payload == null) return;
         payload.put("level", level);
-        payload.put("removedOptions", null);
-        payload.put("audiencePercents", null);
+        payload.put("removedOptions", List.of());
+        payload.put("audiencePercents", List.of());
         if (forLevel.isEmpty()) {
             payload.put("question", "Pergunta nível " + level);
             payload.put("options", List.of("A", "B", "C", "D"));
@@ -78,7 +78,7 @@ public class MillionaireEngine {
 
     @SuppressWarnings("unchecked")
     public boolean submitAnswer(GameSession session, String connectionId, int answerIndex) {
-        if (session.getGameType() != GameType.SHOW_DO_MILHAO || session.getPhase() != GamePhase.MILLIONAIRE_QUESTION) return false;
+        if (session.getGameType() != GameType.QUIZ_INCREMENTAL || session.getPhase() != GamePhase.MILLIONAIRE_QUESTION) return false;
         List<Player> players = session.getPlayers();
         if (players.isEmpty()) return false;
         if (!players.get(0).getId().equals(connectionId)) return false; // single player game, first is the one playing
@@ -116,7 +116,7 @@ public class MillionaireEngine {
 
     @SuppressWarnings("unchecked")
     public void lifeline50_50(GameSession session, String connectionId) {
-        if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+        if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
         Map<String, Object> payload = (Map<String, Object>) session.getGamePayload();
         if (payload == null || Boolean.TRUE.equals(payload.get("lifeline50Used"))) return;
         List<String> options = (List<String>) payload.get("options");
@@ -135,7 +135,7 @@ public class MillionaireEngine {
 
     @SuppressWarnings("unchecked")
     public void lifelineUni(GameSession session, String connectionId) {
-        if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+        if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
         Map<String, Object> payload = (Map<String, Object>) session.getGamePayload();
         if (payload == null || Boolean.TRUE.equals(payload.get("lifelineUniUsed"))) return;
         List<String> options = (List<String>) payload.get("options");
@@ -157,11 +157,21 @@ public class MillionaireEngine {
 
     @SuppressWarnings("unchecked")
     public void lifelineSkip(GameSession session, String connectionId) {
-        if (session.getGameType() != GameType.SHOW_DO_MILHAO) return;
+        if (session.getGameType() != GameType.QUIZ_INCREMENTAL) return;
         Map<String, Object> payload = (Map<String, Object>) session.getGamePayload();
         if (payload == null || Boolean.TRUE.equals(payload.get("lifelineSkipUsed"))) return;
         int level = payload.get("level") != null ? ((Number) payload.get("level")).intValue() : 1;
         payload.put("lifelineSkipUsed", true);
         loadQuestionForLevel(session, level);
+    }
+
+    @Override
+    public boolean supports(GameType gameType) {
+        return gameType == GameType.QUIZ_INCREMENTAL;
+    }
+
+    @Override
+    public GameType getSupportedGameType() {
+        return GameType.QUIZ_INCREMENTAL;
     }
 }
