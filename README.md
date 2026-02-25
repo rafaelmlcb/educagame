@@ -90,6 +90,101 @@ npx playwright show-trace test-results/<pasta-do-teste>/trace.zip
 
 ## Debug/Tracing (dev)
 
+## Developer Quick Start & E2E (WSL recommended)
+
+Use these commands to build and run the project and the Playwright end-to-end tests locally. We recommend running the Playwright flows inside WSL (Ubuntu-24.04) to avoid Windows/PowerShell path and permission issues.
+
+Backend (dev)
+
+```bash
+cd backend
+mvn quarkus:dev
+```
+
+Backend (build & run jar)
+
+```bash
+cd backend
+mvn -DskipTests package
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+Frontend (dev)
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Frontend (build)
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Run Playwright E2E locally (recommended: inside WSL)
+
+```bash
+# from repo root (on WSL)
+cd frontend
+# run playwright with the project's scripts (build+webserver if needed)
+npm run e2e:web --silent
+# or run playwright directly:
+npx playwright test --project=chromium --reporter=list
+```
+
+Notes:
+- The Playwright `globalSetup` builds the backend JAR and starts it, then waits for `/q/health` to be healthy.
+- If you see CORS/preflight errors about `x-request-id`, ensure the backend is using the updated `application.properties` (contains `x-request-id` in the allowed headers).
+- Playwright artifacts (traces/videos/screenshots) are saved under `frontend/test-results` when tests fail or when tracing is enabled.
+
+Quick trace inspection
+
+```bash
+cd frontend
+npx playwright show-trace test-results/<test-run-folder>/trace.zip
+```
+
+Minimal GitHub Actions example (optional)
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build-and-e2e:
+    runs-on: ubuntu-latest
+    services:
+      # Optional: cache or DB services if needed
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Build backend
+        run: |
+          cd backend
+          mvn -DskipTests package
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+      - name: Run Playwright tests
+        run: |
+          cd frontend
+          npx playwright test --project=chromium --reporter=github
+```
+
+
 ### Correlation ID (REST)
 
 - O frontend envia um header `X-Request-Id` em todas as chamadas HTTP (Axios).
