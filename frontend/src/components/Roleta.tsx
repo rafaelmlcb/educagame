@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import Box from '@mui/material/Box'
 import type { WheelSegment } from '@/types/game'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
 
 interface RoletaProps {
   segments: WheelSegment[]
@@ -34,27 +36,19 @@ export function Roleta({ segments, resultIndex, spinning, onSpinComplete }: Role
   }, [spinning])
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        overflow: 'hidden',
-        border: '4px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 0 60px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.3)',
-      }}
-    >
-      <motion.div
-        animate={controls}
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '50%',
-          position: 'relative',
-        }}
-        onAnimationComplete={() => { onSpinComplete?.(); spunRef.current = false }}
-      >
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
+      <Card sx={{ width: size, height: size, borderRadius: '50%', boxShadow: 'none', bgcolor: 'transparent' }}>
+        <CardContent sx={{ p: 0, position: 'relative', width: '100%', height: '100%' }}>
+          <motion.div
+            animate={controls}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              position: 'relative',
+            }}
+            onAnimationComplete={() => { onSpinComplete?.(); spunRef.current = false }}
+          >
         {segments.map((seg, i) => {
           const angle = (360 / segments.length) * i
           return (
@@ -99,21 +93,23 @@ export function Roleta({ segments, resultIndex, spinning, onSpinComplete }: Role
             </Box>
           )
         })}
-      </motion.div>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -8,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 0,
-          height: 0,
-          borderLeft: '12px solid transparent',
-          borderRight: '12px solid transparent',
-          borderTop: '20px solid #10b981',
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-        }}
-      />
+          </motion.div>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '12px solid transparent',
+              borderRight: '12px solid transparent',
+              borderTop: '20px solid #10b981',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+            }}
+          />
+        </CardContent>
+      </Card>
     </Box>
   )
 }
